@@ -94,14 +94,14 @@
   raw: containerd config default | sudo tee /etc/containerd/config.toml
   when: not containerdconfig_check.stat.exists
 
-- name: Ensure a specific config line is set 1
+- name: Ensure a specific config line is amended
   ansible.builtin.lineinfile:
     path: /etc/containerd/config.toml   # File to modify
     regexp: '^SystemdCgroup' # Regex to find the line
     line: '            SystemdCgroup = true'  # Replacement line
     backup: yes                    # Keep a backup before changing
 
-- name: Change Apache listen port to 8080
+- name: Ensure a specific config line is added 
   ansible.builtin.lineinfile:
     path: /etc/containerd/conf.toml
     regexp: '^disable_tcp_service'
