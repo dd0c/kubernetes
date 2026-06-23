@@ -1,8 +1,8 @@
 ---
 
-- name: restart myapp
+- name: Restart containerd.service
   service:
-    name: cwcontainerd.service
+    name: containerd.service
     state: restarted
 
 ...
