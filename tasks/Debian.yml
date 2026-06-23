@@ -101,6 +101,7 @@
     owner: root
     group: root
     mode: '0644'
+  notify: Restart containerd.service
 
 # - name: Ensure a specific config line is amended
 #   ansible.builtin.lineinfile:
