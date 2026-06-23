@@ -1,0 +1,41 @@
+---
+
+- name: Add the br_netfilter module and make sure it is loaded after reboots
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+    persistent: present
+
+- name: Add the overlay module and make sure it is loaded after reboots
+  community.general.modprobe:
+    name: overlay
+    state: present
+    persistent: present
+
+- name: Create an /usr/local systemd directory if it does not exist
+    ansible.builtin.file:
+      path: /usr/local/lib/systemd/system
+      state: directory
+      mode: '0755'
+
+- name: Copy containerd.service to /usr/local on remote host with permissions
+  ansible.builtin.copy:
+    src: files/containerd.service
+    dest: /usr/local/lib/systemd/system/containerd.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Download containerd tar archive # with check (md5)
+  ansible.builtin.get_url:
+    url: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz"
+    dest: /tmp/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+
+- name: Download runc binary # with check (md5)
+  ansible.builtin.get_url:
+    url: "https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.amd64"
+    dest: /tmp/runc.amd64
+    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+
+...
