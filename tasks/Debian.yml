@@ -18,13 +18,14 @@
     state: directory
     mode: '0755'
 
-- name: Copy containerd.service to /usr/local on remote host with permissions
-  ansible.builtin.copy:
-    src: files/containerd.service
+- name: Download containerd.service file # with check (md5)
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service"
     dest: /usr/local/lib/systemd/system/containerd.service
     owner: root
     group: root
     mode: '0644'
+    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
 
 - name: Download containerd tar archive # with check (md5)
   ansible.builtin.get_url:
