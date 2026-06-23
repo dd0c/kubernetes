@@ -81,32 +81,40 @@
 
 - name: Create an /etc/containerd directory if it does not exist
   ansible.builtin.file:
-    path: /etc/containerd
+    path: /etc/containerd/conf.d
     state: directory
     mode: '0755'
 
-- name: Check if containerd config file exists
-  stat:
-    path: /etc/containerd/config.toml
-  register: containerdconfig_check
+# - name: Check if containerd config file exists
+#   stat:
+#     path: /etc/containerd/config.toml
+#   register: containerdconfig_check
  
-- name: Rawly create containerd config file
-  raw: containerd config default | sudo tee /etc/containerd/config.toml
-  when: not containerdconfig_check.stat.exists
+# - name: Rawly create containerd config file
+#   raw: containerd config default | sudo tee /etc/containerd/config.toml
+#   when: not containerdconfig_check.stat.exists
 
-- name: Ensure a specific config line is amended
-  ansible.builtin.lineinfile:
-    path: /etc/containerd/config.toml   # File to modify
-    regexp: '^SystemdCgroup' # Regex to find the line
-    line: '            SystemdCgroup = true'  # Replacement line
-    backup: yes                    # Keep a backup before changing
+- name: Copy containerd config with owner and permissions
+  ansible.builtin.copy:
+    src: files/etc/containerd/config.toml
+    dest: /etc/containerd/config.toml
+    owner: root
+    group: root
+    mode: '0644'
 
-- name: Ensure a specific config line is added 
-  ansible.builtin.lineinfile:
-    path: /etc/containerd/conf.toml
-    regexp: '^disable_tcp_service'
-    insertbefore: '^disable_tcp_service '
-    line: '    sandbox_image = "registry.k8s.io/pause:3.10"'
-  notify: Restart containerd.service
+# - name: Ensure a specific config line is amended
+#   ansible.builtin.lineinfile:
+#     path: /etc/containerd/config.toml   # File to modify
+#     regexp: '^SystemdCgroup' # Regex to find the line
+#     line: '            SystemdCgroup = true'  # Replacement line
+#     backup: yes                    # Keep a backup before changing
+
+# - name: Ensure a specific config line is added 
+#   ansible.builtin.lineinfile:
+#     path: /etc/containerd/config.toml
+#     regexp: '^disable_tcp_service'
+#     insertbefore: '^disable_tcp_service '
+#     line: '    sandbox_image = "registry.k8s.io/pause:3.10"'
+#   notify: Restart containerd.service
 
 ...
