@@ -33,10 +33,27 @@
     dest: /tmp/containerd-{{ containerd_version }}-linux-amd64.tar.gz
     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
 
+- name: Unarchive containerd tar archive which already is on the remote machine
+  ansible.builtin.unarchive:
+    src: /tmp/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+    dest: /usr/local
+    remote_src: yes
+
+- name: Start and enable containerd.service, also issue daemon-reload to pick up config changes
+  ansible.builtin.systemd_service:
+    state: started
+    enabled: true
+    daemon_reload: true
+    name: containerd.service
+
 - name: Download runc binary # with check (md5)
   ansible.builtin.get_url:
     url: "https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.amd64"
     dest: /tmp/runc.amd64
     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+ 
+- name: Rawly install runc.amd64
+  raw: install -m 755 runc.amd64 /usr/local/sbin/runc
+    creates: /usr/local/sbin/runc
 
 ...
