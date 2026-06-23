@@ -51,9 +51,14 @@
     url: "https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.amd64"
     dest: /tmp/runc.amd64
     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+
+- name: Check if runc is installed
+  stat:
+    path: /usr/local/sbin/runc
+  register: runc_check
  
 - name: Rawly install runc.amd64
-  raw: install -m 755 runc.amd64 /usr/local/sbin/runc
-    creates: /usr/local/sbin/runc
+  raw: install -m 755 /tmp/runc.amd64 /usr/local/sbin/runc
+  when: not runc_check.stat.exists
 
 ...
