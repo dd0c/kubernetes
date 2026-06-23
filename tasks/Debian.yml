@@ -61,4 +61,38 @@
   raw: install -m 755 /tmp/runc.amd64 /usr/local/sbin/runc
   when: not runc_check.stat.exists
 
+- name: Create an /opt/cni/bin directory if it does not exist
+  ansible.builtin.file:
+    path: /opt/cni/bin
+    state: directory
+    mode: '0755'
+
+- name: Download CNI Plugins # with check (md5)
+  ansible.builtin.get_url:
+    url: "https://github.com/containernetworking/plugins/releases/download/vi{{ cni_version }}/cni-plugins-linux-amd64-v{{ cni_version }}.tgz"
+    dest: /tmp/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
+    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+
+- name: Unarchive CNI Plugins tar archive which already is on the remote machine
+  ansible.builtin.unarchive:
+    src: /tmp/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
+    dest: /opt/cni/bin
+    remote_src: yes
+
+- name: Create an /etc/containerd directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: Check if containerd config file exists
+  stat:
+    path: /etc/containerd/config.toml
+  register: containerdconfig_check
+ 
+- name: Rawly create containerd config file
+  raw: containerd config default | sudo tee /etc/containerd/config.toml
+  when: not containerdconfig_check.stat.exists
+
+
 ...
