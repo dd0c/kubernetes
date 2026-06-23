@@ -13,10 +13,10 @@
     persistent: present
 
 - name: Create an /usr/local systemd directory if it does not exist
-    ansible.builtin.file:
-      path: /usr/local/lib/systemd/system
-      state: directory
-      mode: '0755'
+  ansible.builtin.file:
+    path: /usr/local/lib/systemd/system
+    state: directory
+    mode: '0755'
 
 - name: Copy containerd.service to /usr/local on remote host with permissions
   ansible.builtin.copy:
