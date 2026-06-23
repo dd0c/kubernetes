@@ -69,7 +69,7 @@
 
 - name: Download CNI Plugins # with check (md5)
   ansible.builtin.get_url:
-    url: "https://github.com/containernetworking/plugins/releases/download/vi{{ cni_version }}/cni-plugins-linux-amd64-v{{ cni_version }}.tgz"
+    url: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-linux-amd64-v{{ cni_version }}.tgz"
     dest: /tmp/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
 
@@ -94,5 +94,19 @@
   raw: containerd config default | sudo tee /etc/containerd/config.toml
   when: not containerdconfig_check.stat.exists
 
+- name: Ensure a specific config line is set 1
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/config.toml   # File to modify
+    regexp: '^SystemdCgroup' # Regex to find the line
+    line: '            SystemdCgroup = true'  # Replacement line
+    backup: yes                    # Keep a backup before changing
+
+- name: Change Apache listen port to 8080
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/conf.toml
+    regexp: '^disable_tcp_service'
+    insertbefore: '^disable_tcp_service '
+    line: '    sandbox_image = "registry.k8s.io/pause:3.10"'
+  notify: Restart containerd.service
 
 ...

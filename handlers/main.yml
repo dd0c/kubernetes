@@ -1,4 +1,8 @@
 ---
 
+- name: restart myapp
+  service:
+    name: cwcontainerd.service
+    state: restarted
 
 ...
