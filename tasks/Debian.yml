@@ -126,6 +126,11 @@
     - curl
     - gpg
 
+- name: Check if kubernetes apt keyring file exists
+  stat:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  register: kubernetesaptkeyring_check
+
 - block:
   - name: Check if kubernetes apt keyring file exists
     stat:
