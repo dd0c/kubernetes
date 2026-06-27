@@ -12,78 +12,110 @@
     state: present
     persistent: present
 
-- name: Create an /usr/local systemd directory if it does not exist
-  ansible.builtin.file:
-    path: /usr/local/lib/systemd/system
-    state: directory
-    mode: '0755'
+- name: Enable traffic between the physical network and the virtual pod network for ipv4 bridge
+  ansible.posix.sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
 
-- name: Download containerd.service file # with check (md5)
-  ansible.builtin.get_url:
-    url: "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service"
-    dest: /usr/local/lib/systemd/system/containerd.service
-    owner: root
-    group: root
-    mode: '0644'
-    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+- name: Enable traffic between the physical network and the virtual pod network for ipv6 bridge
+  ansible.posix.sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
 
-- name: Download containerd tar archive # with check (md5)
-  ansible.builtin.get_url:
-    url: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz"
-    dest: /tmp/containerd-{{ containerd_version }}-linux-amd64.tar.gz
-    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+- name: Enable traffic between the physical network and the virtual pod network
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
 
-- name: Unarchive containerd tar archive which already is on the remote machine
-  ansible.builtin.unarchive:
-    src: /tmp/containerd-{{ containerd_version }}-linux-amd64.tar.gz
-    dest: /usr/local
-    remote_src: yes
+- name: Ensure packages for Kubernetes are present
+  ansible.builtin.apt:
+    pkg:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gpg
 
-- name: Start and enable containerd.service, also issue daemon-reload to pick up config changes
-  ansible.builtin.systemd_service:
-    state: started
-    enabled: true
-    daemon_reload: true
-    name: containerd.service
+# - name: Create an /usr/local systemd directory if it does not exist
+#   ansible.builtin.file:
+#     path: /usr/local/lib/systemd/system
+#     state: directory
+#     mode: '0755'
 
-- name: Download runc binary # with check (md5)
-  ansible.builtin.get_url:
-    url: "https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.amd64"
-    dest: /tmp/runc.amd64
-    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+# - name: Download containerd.service file # with check (md5)
+#   ansible.builtin.get_url:
+#     url: "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service"
+#     dest: /usr/local/lib/systemd/system/containerd.service
+#     owner: root
+#     group: root
+#     mode: '0644'
+#     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
 
-- name: Check if runc is installed
-  stat:
-    path: /usr/local/sbin/runc
-  register: runc_check
+# - name: Download containerd tar archive # with check (md5)
+#   ansible.builtin.get_url:
+#     url: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-amd64.tar.gz"
+#     dest: /tmp/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+#     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+
+# - name: Unarchive containerd tar archive which already is on the remote machine
+#   ansible.builtin.unarchive:
+#     src: /tmp/containerd-{{ containerd_version }}-linux-amd64.tar.gz
+#     dest: /usr/local
+#     remote_src: yes
+
+# - name: Start and enable containerd.service, also issue daemon-reload to pick up config changes
+#   ansible.builtin.systemd_service:
+#     state: started
+#     enabled: true
+#     daemon_reload: true
+#     name: containerd.service
+
+# - name: Download runc binary # with check (md5)
+#   ansible.builtin.get_url:
+#     url: "https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.amd64"
+#     dest: /tmp/runc.amd64
+#     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+
+# - name: Check if runc is installed
+#   stat:
+#     path: /usr/local/sbin/runc
+#   register: runc_check
  
-- name: Rawly install runc.amd64
-  raw: install -m 755 /tmp/runc.amd64 /usr/local/sbin/runc
-  when: not runc_check.stat.exists
+# - name: Rawly install runc.amd64
+#   raw: install -m 755 /tmp/runc.amd64 /usr/local/sbin/runc
+#   when: not runc_check.stat.exists
 
-- name: Create an /opt/cni/bin directory if it does not exist
-  ansible.builtin.file:
-    path: /opt/cni/bin
-    state: directory
-    mode: '0755'
+# - name: Create an /opt/cni/bin directory if it does not exist
+#   ansible.builtin.file:
+#     path: /opt/cni/bin
+#     state: directory
+#     mode: '0755'
 
-- name: Download CNI Plugins # with check (md5)
-  ansible.builtin.get_url:
-    url: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-linux-amd64-v{{ cni_version }}.tgz"
-    dest: /tmp/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
-    # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
+# - name: Download CNI Plugins # with check (md5)
+#   ansible.builtin.get_url:
+#     url: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-linux-amd64-v{{ cni_version }}.tgz"
+#     dest: /tmp/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
+#     # checksum: md5:66dffb5228a211e61d6d7ef4a86f5758
 
-- name: Unarchive CNI Plugins tar archive which already is on the remote machine
-  ansible.builtin.unarchive:
-    src: /tmp/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
-    dest: /opt/cni/bin
-    remote_src: yes
+# - name: Unarchive CNI Plugins tar archive which already is on the remote machine
+#   ansible.builtin.unarchive:
+#     src: /tmp/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
+#     dest: /opt/cni/bin
+#     remote_src: yes
 
-- name: Create an /etc/containerd directory if it does not exist
-  ansible.builtin.file:
-    path: /etc/containerd/conf.d
-    state: directory
-    mode: '0755'
+# - name: Create an /etc/containerd directory if it does not exist
+#   ansible.builtin.file:
+#     path: /etc/containerd/conf.d
+#     state: directory
+#     mode: '0755'
 
 # - name: Check if containerd config file exists
 #   stat:
@@ -117,14 +149,6 @@
 #     insertbefore: '^disable_tcp_service '
 #     line: '    sandbox_image = "registry.k8s.io/pause:3.10"'
 #   notify: Restart containerd.service
-
-- name: Ensure packages for Kubernetes are present
-  ansible.builtin.apt:
-    pkg:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - gpg
 
 - name: Check if kubernetes apt keyring file exists
   stat:
